@@ -1,0 +1,14 @@
+Ubslim is a bash script to install slimmed Ubuntu LTS 24.04.01.
+
+Fully netinstall.
+No snap.
+No sudo.
+No gpt.
+No network-manager.
+Just base system + kernel + xorg + fluxbox.
+
+Usage:
+  Boot from any LiveCD distro, then
+# wget https://raw.githubusercontent.com/vallbsd/ubslim/refs/heads/main/ubslim.sh
+# bash ubslim.sh
+
