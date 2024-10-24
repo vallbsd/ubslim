@@ -157,7 +157,12 @@ DEBIAN-FRONTEND=noninteractive apt install -y keyboard-configuration
 apt install -y linux-base linux-generic linux-image-generic systemd \
                init initramfs-tools grub2 dialog locales zstd tzdata \
                bc iproute2 inetutils-ping less nvi ncal man-db sed wget \
-               xserver-xorg xinit x11-utils xterm fluxbox
+               xserver-xorg xinit x11-utils xterm numlockx
+
+echo ''
+echo 'Select desired window manager, for example fluxbox, openbox or icewm:'
+read -i "fluxbox" -e WM
+apt install -y $WM
 
 echo ''
 echo 'Would you like to set specific boot options for GRUB?'
