@@ -134,10 +134,9 @@ mount -t devpts -o noexec,nosuid devpts /mnt/dev/pts
 ### WRITE CHROOT SCRIPT
 # What happens here:
 #  unminimize base system
-#  install minimal set of packages
+#  install minimal set of desktop needed packages
 #  configure grub2
 #  set hostname
-#  configure network (by systemd-networkd)
 #  add user
 #  add a couple of sane fixes
 #  add nonsnap firefox repository
@@ -157,7 +156,8 @@ DEBIAN-FRONTEND=noninteractive apt install -y keyboard-configuration
 apt install -y linux-base linux-generic linux-image-generic systemd \
                init initramfs-tools grub2 dialog locales zstd tzdata \
                bc iproute2 inetutils-ping less nvi ncal man-db sed wget \
-               xserver-xorg xinit x11-utils xterm fluxbox
+               xserver-xorg xinit x11-utils xterm numlockx \
+               network-manager pulseaudio
 
 echo ''
 echo 'Would you like to set specific boot options for GRUB?'
@@ -179,26 +179,6 @@ echo 'Set hostname:'
 read -i "ubuntu" -e HOSTNAME
 echo "$HOSTNAME" > /etc/hostname
 
-ETHS=$(ip link | grep ^[[:digit:]] | grep -v lo: | cut -d ':' -f 2 | tr -d ' ')
-ANS="yes"
-for ETH in $ETHS
-do
-  echo ''
-  echo "Network device $ETH was found."
-  echo "Set DHCP client for it?"
-  read -i $ANS -e ANS
-  if [ "$ANS" = "yes" ]
-  then
-    echo "[Match]
-Name=$ETH
-
-[Network]
-DHCP=yes" > /etc/systemd/network/$ETH.network
-    ANS="no"
-  fi
-done
-
-systemctl enable systemd-networkd
 localectl set-locale en_US.UTF-8
 
 echo ''
@@ -225,6 +205,10 @@ rmdir /*.usr-is-merged
 echo 'APT::AutoRemove::SuggestsImportant "false";' > /etc/apt/apt.conf.d/99autoremove # fix autoremoving
 echo 'kernel.dmesg_restrict=0' >> /etc/sysctl.conf # allow user to read dmesg
 
+su - $USER -c 'pulseaudio --start'
+su - $USER -c 'pactl set-sink-mute @DEFAULT_SINK@ false'
+su - $USER -c 'pactl set-sink-volume @DEFAULT_SINK@ 70%'
+
 wget -O /etc/apt/keyrings/packages.mozilla.org.asc https://packages.mozilla.org/apt/repo-signing-key.gpg
 echo "deb [signed-by=/etc/apt/keyrings/packages.mozilla.org.asc] https://packages.mozilla.org/apt mozilla main" \
      > /etc/apt/sources.list.d/mozilla.list
@@ -241,3 +225,4 @@ rm /mnt/continue_install
 
 echo 'Installation done.'
 echo 'Now you can reboot to installed system or continue by chroot /mnt .'
+echo 'Use nmtui to set network and apt to install desired window manager.'
