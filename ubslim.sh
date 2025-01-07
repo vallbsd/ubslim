@@ -1,5 +1,9 @@
 #!/bin/bash
 
+export LC_ALL=C
+export LANG=C
+export LANGUAGE=C
+
 if [ "$(id -u)" != "0" ]
 then
   echo 'You must have root privileges to use this.'
@@ -152,12 +156,13 @@ apt update
 apt install --reinstall -y $(dpkg-query -S /usr/share/man | tr -d ',' | sed 's/\: \/usr.*$//')
 apt upgrade -y
 
-DEBIAN-FRONTEND=noninteractive apt install -y keyboard-configuration
-apt install -y linux-base linux-generic linux-image-generic systemd \
-               init initramfs-tools grub2 dialog locales zstd tzdata \
-               bc iproute2 inetutils-ping less nvi ncal man-db sed wget \
-               xserver-xorg xinit x11-utils xterm numlockx \
-               network-manager pulseaudio
+DEBIAN_FRONTEND=noninteractive apt install -y \
+  apt-utils dialog locales man-db keyboard-configuration \
+  systemd init initramfs-tools linux-base linux-generic linux-image-generic \
+  grub2 zstd tzdata iproute2 inetutils-ping network-manager wget pulseaudio \
+  bc less nvi ncal sed pciutils xserver-xorg xinit x11-utils xterm numlockx
+
+dpkg-reconfigure tzdata
 
 echo ''
 echo 'Would you like to set specific boot options for GRUB?'
@@ -172,14 +177,14 @@ grub-mkconfig -o /boot/grub/grub.cfg
 grub-install $(head -1 /etc/fstab | cut -d '1' -f 1)
 
 echo ''
-echo 'Seems that everything was installed fine.'
-echo 'Let configure some things.'
-echo ''
 echo 'Set hostname:'
 read -i "ubuntu" -e HOSTNAME
 echo "$HOSTNAME" > /etc/hostname
 
 localectl set-locale en_US.UTF-8
+
+echo 'network:
+ renderer: NetworkManager' > /etc/netplan/config.yaml
 
 echo ''
 echo 'Set root password:'
@@ -223,6 +228,7 @@ chroot /mnt /bin/bash -c "/bin/bash /continue_install"
 
 rm /mnt/continue_install
 
+echo ''
 echo 'Installation done.'
 echo 'Now you can reboot to installed system or continue by chroot /mnt .'
 echo 'Use nmtui to set network and apt to install desired window manager.'
