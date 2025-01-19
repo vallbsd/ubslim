@@ -160,7 +160,7 @@ DEBIAN_FRONTEND=noninteractive apt install -y \
   apt-utils dialog locales man-db keyboard-configuration \
   systemd init initramfs-tools linux-base linux-generic linux-image-generic \
   grub2 zstd tzdata iproute2 inetutils-ping network-manager wget pulseaudio \
-  bc less nvi ncal sed pciutils xserver-xorg xinit x11-utils xterm numlockx
+  bc less nvi ncal sed pciutils xserver-xorg xinit x11-utils xterm
 
 dpkg-reconfigure tzdata
 
@@ -183,36 +183,38 @@ echo "$HOSTNAME" > /etc/hostname
 
 localectl set-locale en_US.UTF-8
 
-echo 'network:
- renderer: NetworkManager' > /etc/netplan/config.yaml
-
 echo ''
 echo 'Set root password:'
 passwd
 echo ''
 echo 'Choose name for regular user:'
 read USER
-useradd -g root -G operator,sudo -s /bin/bash -m $USER
-passwd -d $USER 1> /dev/null
-echo ''
-echo 'Add tty autologin for this user?'
-read -i "yes" -e ANS
-if [ "$ANS" = "yes" ]
+if [ -z $USER ]
 then
-  mkdir /etc/systemd/system/getty\@.service.d
-  (echo '[Service]'
-   echo 'ExecStart='
-   grep '^ExecStart=' /usr/lib/systemd/system/getty\@.service | sed "s/--noclear/--noclear --autologin $USER/" ) \
-        > /etc/systemd/system/getty\@.service.d/autologin.conf
+  echo 'Empty name. User will not be created.'
+  echo ''
+else
+  useradd -g root -G operator,sudo -s /bin/bash -m $USER
+  passwd -d $USER 1> /dev/null
+  echo ''
+  echo 'Add tty autologin for this user?'
+  read -i "yes" -e ANS
+  if [ "$ANS" = "yes" ]
+  then
+    mkdir /etc/systemd/system/getty\@.service.d
+    (echo '[Service]'
+     echo 'ExecStart='
+     grep '^ExecStart=' /usr/lib/systemd/system/getty\@.service | sed "s/--noclear/--noclear --autologin $USER/" ) \
+          > /etc/systemd/system/getty\@.service.d/autologin.conf
+  fi
 fi
 
 rmdir /*.usr-is-merged
 echo 'APT::AutoRemove::SuggestsImportant "false";' > /etc/apt/apt.conf.d/99autoremove # fix autoremoving
 echo 'kernel.dmesg_restrict=0' >> /etc/sysctl.conf # allow user to read dmesg
 
-su - $USER -c 'pulseaudio --start'
-su - $USER -c 'pactl set-sink-mute @DEFAULT_SINK@ false'
-su - $USER -c 'pactl set-sink-volume @DEFAULT_SINK@ 70%'
+echo 'network:
+ renderer: NetworkManager' > /etc/netplan/config.yaml
 
 wget -O /etc/apt/keyrings/packages.mozilla.org.asc https://packages.mozilla.org/apt/repo-signing-key.gpg
 echo "deb [signed-by=/etc/apt/keyrings/packages.mozilla.org.asc] https://packages.mozilla.org/apt mozilla main" \
