@@ -105,15 +105,16 @@ mount "/dev/$ROOTPART" /mnt
 
 ### DOWNLOAD AND UNPACK UBUNTU BASE
 
-wget http://cdimage.ubuntu.com/ubuntu-base/releases/24.04/release/ubuntu-base-24.04.1-base-amd64.tar.gz \
-     -O /tmp/ubuntu-base-amd64.tar.gz
+cd /tmp
+wget -r --no-parent --no-directories -A "ubuntu-base-*-amd64.tar.gz" \
+     http://cdimage.ubuntu.com/ubuntu-base/releases/24.04/release/
+tar -xf ubuntu-base-*-amd64.tar.gz -C /mnt
 if [ $? -ne 0 ]
 then
   echo 'Error: Can not download Ubuntu base archive.'
   umount "/dev/$ROOTPART"
   exit
 fi
-tar -xf /tmp/ubuntu-base-amd64.tar.gz -C /mnt
 
 ### WRITE FSTAB AND RESOLV.CONF
 
