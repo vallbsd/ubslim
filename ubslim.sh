@@ -182,6 +182,7 @@ echo 'Set hostname:'
 read -i "ubuntu" -e HOSTNAME
 echo "$HOSTNAME" > /etc/hostname
 
+locale-gen en_US.UTF-8 ru_RU.UTF-8
 localectl set-locale en_US.UTF-8
 
 echo ''
