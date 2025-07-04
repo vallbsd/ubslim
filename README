@@ -1,10 +1,9 @@
 This is a bash script to install slimmed Ubuntu LTS 24.04
 
 Fully textual netinstall.
-No snap, no sudo, no gpt, no wm.
-Just base system + xorg + pulseaudio.
+No snap, no sudo, no gpt.
+Just base system + xorg + fluxbox.
 Nmtui as network config tool.
-Just install necessaries later.
 
 Usage:
   Boot from any GNU/Linux LiveCD, download this script and run as root:

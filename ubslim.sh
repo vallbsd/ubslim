@@ -158,10 +158,10 @@ apt install --reinstall -y $(dpkg-query -S /usr/share/man | tr -d ',' | sed 's/\
 apt upgrade -y
 
 DEBIAN_FRONTEND=noninteractive apt install -y \
-  apt-utils dialog locales man-db keyboard-configuration \
-  systemd init initramfs-tools linux-base linux-generic linux-image-generic \
-  grub2 zstd tzdata iproute2 inetutils-ping network-manager wget pulseaudio \
-  bc less nvi ncal sed pciutils xserver-xorg xinit x11-utils xterm
+  apt-utils dialog locales man-db keyboard-configuration systemd init grub2 \
+  initramfs-tools linux-base linux-generic linux-image-generic zstd tzdata  \
+  fdisk iproute2 inetutils-ping network-manager wget pulseaudio alsa-utils  \
+  bc less nvi ncal sed pciutils xserver-xorg xinit x11-utils xterm fluxbox
 
 dpkg-reconfigure tzdata
 
@@ -223,6 +223,15 @@ echo "deb [signed-by=/etc/apt/keyrings/packages.mozilla.org.asc] https://package
      > /etc/apt/sources.list.d/mozilla.list
 echo -e 'Package: *\nPin: origin packages.mozilla.org\nPin-Priority: 1000' > /etc/apt/preferences.d/mozilla
 apt update
+
+echo 'Section "InputClass"
+        Identifier "libinput touchpad catchall"
+        Option "Tapping" "on"
+EndSection' > /etc/X11/xorg.conf.d/20-touchpad.conf
+
+echo 'set ruler'      >> /etc/vi.exrc
+echo 'set autoindent' >> /etc/vi.exrc
+echo 'set noflash'    >> /etc/vi.exrc
 
 EOF
 
