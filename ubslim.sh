@@ -182,7 +182,14 @@ echo 'Set hostname:'
 read -i "ubuntu" -e HOSTNAME
 echo "$HOSTNAME" > /etc/hostname
 
-locale-gen en_US.UTF-8 ru_RU.UTF-8
+echo ''
+echo 'Set locale for X11. Console locale will remain en_US:'
+read -i "ru_RU" -e LOCALE
+if [ "$LOCALE" = "en_US" ]
+then
+  LOCALE=''
+fi
+locale-gen en_US.UTF-8 ${LOCALE:+$LOCALE.UTF-8}
 localectl set-locale en_US.UTF-8
 
 echo ''
@@ -191,7 +198,7 @@ passwd
 echo ''
 echo 'Choose name for regular user:'
 read USER
-if [ -z $USER ]
+if [ -z "$USER" ]
 then
   echo 'Empty name. User will not be created.'
   echo ''
@@ -232,6 +239,17 @@ EndSection' > /etc/X11/xorg.conf.d/20-touchpad.conf
 echo 'set ruler'      >> /etc/vi.exrc
 echo 'set autoindent' >> /etc/vi.exrc
 echo 'set noflash'    >> /etc/vi.exrc
+
+if [ "$LOCALE" ]
+then
+  echo "export LANG=$LOCALE.UTF-8" >> /home/$USER/.xinitrc
+  KB=$(echo $LOCALE | sed 's/_.*$//')
+  echo "setxkbmap -layout 'us,$KB' -option 'grp:lwin_toggle,grp_led:scroll'" \
+				   >> /home/$USER/.xinitrc
+fi
+echo 'xset r rate 250 34'          >> /home/$USER/.xinitrc
+echo 'exec fluxbox'                >> /home/$USER/.xinitrc
+chown $USER /home/$USER/.xinitrc
 
 EOF
 
