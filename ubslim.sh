@@ -145,6 +145,7 @@ mount -t devpts -o noexec,nosuid devpts /mnt/dev/pts
 #  add user
 #  add a couple of sane fixes
 #  add nonsnap firefox repository
+#  configure user session
 
 cat << 'EOF' > /mnt/continue_install
 rm /etc/dpkg/dpkg.cfg.d/excludes
@@ -222,6 +223,15 @@ rmdir /*.usr-is-merged
 echo 'APT::AutoRemove::SuggestsImportant "false";' > /etc/apt/apt.conf.d/99autoremove # fix autoremoving
 echo 'kernel.dmesg_restrict=0' >> /etc/sysctl.conf # allow user to read dmesg
 
+echo 'set ruler'      >> /etc/vi.exrc
+echo 'set autoindent' >> /etc/vi.exrc
+echo 'set noflash'    >> /etc/vi.exrc
+
+echo 'Section "InputClass"
+        Identifier "libinput touchpad catchall"
+        Option "Tapping" "on"
+EndSection' > /etc/X11/xorg.conf.d/20-touchpad.conf
+
 echo 'network:
  renderer: NetworkManager' > /etc/netplan/config.yaml
 
@@ -230,15 +240,6 @@ echo "deb [signed-by=/etc/apt/keyrings/packages.mozilla.org.asc] https://package
      > /etc/apt/sources.list.d/mozilla.list
 echo -e 'Package: *\nPin: origin packages.mozilla.org\nPin-Priority: 1000' > /etc/apt/preferences.d/mozilla
 apt update
-
-echo 'Section "InputClass"
-        Identifier "libinput touchpad catchall"
-        Option "Tapping" "on"
-EndSection' > /etc/X11/xorg.conf.d/20-touchpad.conf
-
-echo 'set ruler'      >> /etc/vi.exrc
-echo 'set autoindent' >> /etc/vi.exrc
-echo 'set noflash'    >> /etc/vi.exrc
 
 if [ "$LOCALE" ]
 then
