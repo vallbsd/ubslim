@@ -39,7 +39,7 @@ fi
 echo ''
 echo 'Would you like to create totally new partition table on this disk?'
 echo 'If so, print yes. Print no to use existing partitions.'
-read -i "yes" -e FDISK;
+read -e FDISK;
 if [ "$FDISK" = "yes" ]
 then
   MAXSIZE="$(fdisk -l /dev/$ROOTDISK | head -1 | cut -d ' ' -f 3,4 | sed 's/ //g; s/iB,$//')"
@@ -92,7 +92,7 @@ else
   else
     echo ''
     echo 'Partitions on disk '$ROOTDISK' was not found.'
-    echo 'You need to create them to continue unstallation.'
+    echo 'You need to create them to continue installation.'
     echo 'Use cfdisk or rerun this installer.'
     exit
   fi
