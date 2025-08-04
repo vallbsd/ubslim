@@ -20,7 +20,7 @@ fi
 echo ''
 echo 'This is a script to install slimmed Ubuntu LTS.'
 
-### CREATE PARTITIONS
+### CREATE ROOT PARTITION
 
 echo ''
 echo 'List of found disks:'
@@ -33,69 +33,29 @@ echo 'Select a disk to install Ubuntu on, for example sda, sdb or sdc:'
 read -i sd -e ROOTDISK
 if [ ! -e /dev/$ROOTDISK ]
 then
+  echo ''
   echo "Device $ROOTDISK does not exist."
   exit
 fi
 echo ''
-echo 'Would you like to create totally new partition table on this disk?'
-echo 'If so, print yes. Print no to use existing partitions.'
-read -e FDISK;
-if [ "$FDISK" = "yes" ]
+echo 'Here are existing partitions on this disk:'
+fdisk -l /dev/$ROOTDISK | grep --color=never -E '^Device|^\/dev'
+echo ''
+echo 'Would you like to use whole disk for root partition?'
+echo 'If so, print yes. This will create totally new partition table.'
+echo 'Print existing partition name to use existing partition, for example '$ROOTDISK'1.'
+read -e ROOTPART;
+if [ "$ROOTPART" = "yes" ]
 then
-  MAXSIZE="$(fdisk -l /dev/$ROOTDISK | head -1 | cut -d ' ' -f 3,4 | sed 's/ //g; s/iB,$//')"
   echo ''
-  echo "Full disk size of $ROOTDISK is $MAXSIZE."
-  echo 'Print size for root partition, for example 32G or 1500M.'
-  echo 'The rest of disk will be used for swap partition.'
-  read -i $MAXSIZE -e ROOTSIZE
   ROOTPART="$ROOTDISK"1
-  if [ "$ROOTSIZE" != "$MAXSIZE" ]
-  then
-    SWAPPART="$ROOTDISK"2
-  fi
+  (echo o; echo n; echo ""; echo ""; echo ""; echo ""; echo a; echo p; echo w) | fdisk /dev/$ROOTDISK
+elif [ ! -e /dev/$ROOTPART ]
+then
   echo ''
-  (echo o;
-   if [ "$ROOTSIZE" = "$MAXSIZE" ]
-   then
-     echo n; echo p; echo 1; echo ""; echo ""; echo a;
-   else
-     echo n; echo p; echo 1; echo ""; echo "+$ROOTSIZE"; echo a;
-     echo n; echo p; echo 2; echo ""; echo "";
-     echo t; echo 2; echo 82;
-   fi
-   echo p; echo w) | fdisk /dev/$ROOTDISK
-else
-  EXIST="$(fdisk -l /dev/$ROOTDISK | grep --color=never -E '^Device|^\/dev')"
-  if [ "$EXIST" ]
-  then
-    echo ''
-    echo 'Here are existing partitions on this disk:'
-    echo "$EXIST"
-    echo ''
-    echo "Choose partition for / , for example "$ROOTDISK"1 or "$ROOTDISK"2:"
-    ROOTPART="$ROOTDISK"1
-    read -i $ROOTPART -e ROOTPART
-    SWAPPART="$(fdisk -l /dev/$ROOTDISK | grep 'Linux swap' | cut -d ' ' -f 1 | cut -d '/' -f 3)"
-    if [ "$SWAPPART" ]
-    then
-      echo ''
-      echo "It seems that $SWAPPART is a swap partition."
-      echo 'Do you want to use it as swap? If so, print yes.'
-      read -i "yes" -e ANS;
-      if [ "$ANS" != "yes" ]
-      then
-        echo ''
-        echo 'You can set swap manually after installation.'
-        SWAPPART=""
-      fi
-    fi
-  else
-    echo ''
-    echo 'Partitions on disk '$ROOTDISK' was not found.'
-    echo 'You need to create them to continue installation.'
-    echo 'Use cfdisk or rerun this installer.'
-    exit
-  fi
+  echo 'Partition was not found.'
+  echo 'Use cfdisk to manually create partition and rerun this installer.'
+  exit
 fi
 
 ### FORMAT ROOT
@@ -116,16 +76,16 @@ then
   exit
 fi
 
-### WRITE FSTAB AND RESOLV.CONF
+### CREATE SWAP, FSTAB AND RESOLV.CONF
 
 echo "/dev/$ROOTPART / ext4 defaults 0 1" > /mnt/etc/fstab
-if [ "$SWAPPART" ]
-then
-  mkswap "/dev/$SWAPPART"
-  echo "/dev/$SWAPPART none swap defaults 0 0" >> /mnt/etc/fstab
-fi
 
-echo 'nameserver 8.8.8.8' > /mnt/etc/resolv.conf
+fallocate -l 2G /mnt/swapfile
+chmod 0600      /mnt/swapfile
+mkswap          /mnt/swapfile
+echo  '/swapfile none swap defaults 0 0' >> /mnt/etc/fstab
+
+echo 'nameserver 9.9.9.9' > /mnt/etc/resolv.conf
 
 ### PREPARE TO CHROOT
 
@@ -263,4 +223,3 @@ rm /mnt/continue_install
 echo ''
 echo 'Installation done.'
 echo 'Now you can reboot to installed system or continue by chroot /mnt .'
-echo 'Use nmtui to set network and apt to install desired window manager.'

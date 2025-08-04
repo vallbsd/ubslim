@@ -3,6 +3,7 @@ This is a bash script to install slimmed Ubuntu LTS 24.04
 Fully textual netinstall.
 No snap, no sudo, no gpt.
 Just base system + xorg + fluxbox.
+Swap is just a 2Gb file.
 Nmtui as network config tool.
 
 Usage:
