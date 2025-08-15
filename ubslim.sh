@@ -49,6 +49,7 @@ if [ "$ROOTPART" = "yes" ]
 then
   echo ''
   ROOTPART="$ROOTDISK"1
+  dd if=/dev/zero of=/dev/$ROOTDISK count=2048
   (echo o; echo n; echo ""; echo ""; echo ""; echo ""; echo a; echo p; echo w) | fdisk /dev/$ROOTDISK
 elif [ ! -e /dev/$ROOTPART ]
 then
