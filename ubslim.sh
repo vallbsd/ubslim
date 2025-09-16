@@ -43,20 +43,24 @@ fdisk -l /dev/$ROOTDISK | grep --color=never -E '^Device|^\/dev'
 echo ''
 echo 'Would you like to use whole disk for root partition?'
 echo 'If so, print yes. This will create totally new partition table.'
-echo 'Print existing partition name to use existing partition, for example '$ROOTDISK'1.'
-read -e ROOTPART;
-if [ "$ROOTPART" = "yes" ]
+echo "To use existing partition, print it's number, for example 2 :"
+read -e PARTNUM;
+if [ "$PARTNUM" = "yes" ]
 then
   echo ''
   ROOTPART="$ROOTDISK"1
   dd if=/dev/zero of=/dev/$ROOTDISK count=2048
   (echo o; echo n; echo ""; echo ""; echo ""; echo ""; echo a; echo p; echo w) | fdisk /dev/$ROOTDISK
-elif [ ! -e /dev/$ROOTPART ]
+elif [ ! -e /dev/$ROOTDISK$PARTNUM ]
 then
   echo ''
   echo 'Partition was not found.'
   echo 'Use cfdisk to manually create partition and rerun this installer.'
   exit
+else
+  ROOTPART=$ROOTDISK$PARTNUM
+  dd if=/dev/zero of=/dev/$ROOTDISK seek=1 count=2047
+  (echo a; echo $PARTNUM; echo p; echo w) | fdisk /dev/$ROOTDISK
 fi
 
 ### FORMAT ROOT
@@ -67,9 +71,10 @@ mount "/dev/$ROOTPART" /mnt
 ### DOWNLOAD AND UNPACK UBUNTU BASE
 
 cd /tmp
-wget -r --no-parent --no-directories -A "ubuntu-base-*-amd64.tar.gz" \
-     http://cdimage.ubuntu.com/ubuntu-base/releases/24.04/release/
-tar -xf ubuntu-base-*-amd64.tar.gz -C /mnt
+wget https://cdimage.ubuntu.com/ubuntu-base/releases/24.04/release/SHA256SUMS
+TAR=$(cut -d '*' -f 2 SHA256SUMS | grep amd64 | tail -1)
+wget https://cdimage.ubuntu.com/ubuntu-base/releases/24.04/release/$TAR
+tar -xf $TAR -C /mnt
 if [ $? -ne 0 ]
 then
   echo 'Error: Can not download Ubuntu base archive.'
@@ -137,7 +142,7 @@ sed -i -e 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*$/GRUB_CMDLINE_LINUX_DEFAULT="'"$GRUB
        -e 's/^GRUB_TIMEOUT=0/GRUB_TIMEOUT=1/' \
        -e 's/^\#GRUB_TERMINAL=.*$/GRUB_TERMINAL=console/' /etc/default/grub
 grub-mkconfig -o /boot/grub/grub.cfg
-grub-install $(head -1 /etc/fstab | cut -d '1' -f 1)
+grub-install $(head -1 /etc/fstab | cut -d ' ' -f 1 | rev | cut -c 2- | rev)
 
 echo ''
 echo 'Set hostname:'
