@@ -128,7 +128,7 @@ DEBIAN_FRONTEND=noninteractive apt install -y \
   apt-utils dialog locales man-db keyboard-configuration systemd init grub2 \
   initramfs-tools linux-base linux-generic linux-image-generic zstd tzdata  \
   fdisk iproute2 inetutils-ping network-manager wget pulseaudio alsa-utils  \
-  bc less nvi ncal sed pciutils xserver-xorg xinit x11-utils xterm fluxbox
+  bc less nvi ncal sed pciutils xserver-xorg xinit x11-xserver-utils xterm fluxbox
 
 dpkg-reconfigure tzdata
 
